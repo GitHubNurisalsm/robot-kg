@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Регистрация — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="section auth-section">
+  <div class="container">
+    <div class="auth-card">
+      <h1 class="auth-title">Регистрация</h1>
+      <p class="auth-lead">Создайте аккаунт {{ brand.name }} — это займёт минуту.</p>
+
+      <form method="post" class="auth-form" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-error" role="alert">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+        {% for field in form %}{% include "partials/form_field.html" %}{% endfor %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Создать аккаунт</button>
+      </form>
+
+      <p class="auth-switch">Уже есть аккаунт?
+        <a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Войти</a>
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

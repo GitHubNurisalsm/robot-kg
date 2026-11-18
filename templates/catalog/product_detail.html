@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ product.name }} — {{ brand.name }}{% endblock %}
+{% block meta_description %}{{ product.short_description }}{% endblock %}
+
+{% block content %}
+<section class="page-head page-head-compact">
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span>
+      <a href="{% url 'catalog:product_list' %}">Каталог</a><span aria-hidden="true">/</span>
+      <a href="{% url 'catalog:product_list' %}?category={{ product.category.slug }}">{{ product.category.name }}</a><span aria-hidden="true">/</span>
+      <span aria-current="page">{{ product.name }}</span>
+    </nav>
+  </div>
+</section>
+
+<section class="section section-tight">
+  <div class="container product-detail">
+    <div class="product-gallery">
+      <img src="{{ product.image_url }}" alt="{{ product.name }}" width="560" height="460">
+      {% if product.old_price %}<span class="tag tag-sale">Скидка</span>{% endif %}
+    </div>
+
+    <div class="product-info">
+      <span class="product-card-cat">{{ product.category.name }}</span>
+      <h1 class="product-title">{{ product.name }}</h1>
+      <p class="product-short">{{ product.short_description }}</p>
+
+      <div class="product-buy">
+        <div class="price price-lg">
+          <span class="price-current">{{ product.price|floatformat:0|intcomma }} {{ brand.currency }}</span>
+          {% if product.old_price %}<s class="price-old">{{ product.old_price|floatformat:0|intcomma }} {{ brand.currency }}</s>{% endif %}
+        </div>
+        <span class="stock {% if product.in_stock %}stock-yes{% else %}stock-no{% endif %}">
+          {% if product.in_stock %}В наличии: {{ product.stock }} шт.{% else %}Под заказ{% endif %}
+        </span>
+
+        {% if cart_add_url and product.in_stock %}
+          <form method="post" action="{{ cart_add_url }}" class="buy-form">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <label class="sr-only" for="qty">Количество</label>
+            <input id="qty" type="number" name="quantity" value="1" min="1" max="{{ product.stock|stringformat:'d' }}" class="qty-input" inputmode="numeric">
+            <button type="submit" class="btn btn-primary btn-lg">В корзину</button>
+          </form>
+          {% if in_cart_qty %}<p class="hint">Уже в <a href="{% url 'cart:detail' %}">корзине</a>: {{ in_cart_qty }} шт.</p>{% endif %}
+        {% else %}
+          <button type="button" class="btn btn-primary btn-lg" disabled
+                  title="{% if not product.in_stock %}Нет на складе{% else %}Корзина скоро будет доступна{% endif %}">
+            В корзину
+          </button>
+          <p class="hint">{% if not product.in_stock %}Товара нет на складе — оставьте заявку через контакты.{% else %}Оформление покупок скоро станет доступно.{% endif %}</p>
+        {% endif %}
+
+        {% if product.is_rentable %}
+          <div class="rent-note">
+            Доступен в аренду: <b>{{ product.rental_price_per_day|floatformat:0|intcomma }} {{ brand.currency }}/сутки</b>
+            <a class="link-arrow" href="{% url 'rentals:rental' %}?product={{ product.slug }}#rental-form">Арендовать →</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="container product-extra">
+    <article class="product-description">
+      <h2>Описание</h2>
+      {{ product.description|linebreaks }}
+    </article>
+
+    <article class="product-specs">
+      <h2>Характеристики</h2>
+      {% if product.specs.all %}
+        <table class="spec-table">
+          <tbody>
+            {% for spec in product.specs.all %}
+              <tr><th scope="row">{{ spec.name }}</th><td>{{ spec.value }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="hint">Характеристики уточняйте у менеджера.</p>
+      {% endif %}
+    </article>
+  </div>
+</section>
+
+{% if related_products %}
+<section class="section section-muted" aria-labelledby="related-title">
+  <div class="container">
+    <h2 id="related-title" class="section-title section-title-sm">Похожие товары</h2>
+    <div class="product-grid">
+      {% for product in related_products %}
+        {% include "partials/product_card.html" %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Заказ {{ order.number }} — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span>
+      <a href="{% url 'orders:list' %}">Мои заказы</a><span aria-hidden="true">/</span>
+      <span aria-current="page">{{ order.number }}</span>
+    </nav>
+    <h1 class="page-title">Заказ {{ order.number }}</h1>
+    <p class="page-lead">от {{ order.created_at|date:"j E Y, H:i" }} · <span class="status status-{{ order.status }}">{{ order.get_status_display }}</span></p>
+  </div>
+</section>
+
+<section class="section section-tight">
+  <div class="container cart-layout">
+    <div class="form-card">
+      <h2 class="form-card-title">Получатель</h2>
+      <dl class="detail-list">
+        <div><dt>Имя</dt><dd>{{ order.full_name }}</dd></div>
+        <div><dt>Телефон</dt><dd>{{ order.phone }}</dd></div>
+        <div><dt>Email</dt><dd>{{ order.email }}</dd></div>
+        <div><dt>Получение</dt><dd>{{ order.get_delivery_method_display }}</dd></div>
+        {% if order.address %}<div><dt>Адрес</dt><dd>{{ order.address }}</dd></div>{% endif %}
+        {% if order.comment %}<div><dt>Комментарий</dt><dd>{{ order.comment|linebreaksbr }}</dd></div>{% endif %}
+      </dl>
+      <p class="hint">Менеджер свяжется с вами для подтверждения. Оплата при получении или по счёту.</p>
+    </div>
+
+    <aside class="cart-summary" aria-label="Состав заказа">
+      <h2 class="cart-summary-title">Состав</h2>
+      <ul class="summary-items">
+        {% for item in order.items.all %}
+          <li><span>{{ item.product_name }} <small>× {{ item.quantity }} по {{ item.unit_price|floatformat:0|intcomma }}</small></span><b>{{ item.line_total|floatformat:0|intcomma }} {{ brand.currency }}</b></li>
+        {% endfor %}
+      </ul>
+      <div class="cart-summary-total">
+        <span>Итого</span>
+        <strong>{{ order.total|floatformat:0|intcomma }} {{ brand.currency }}</strong>
+      </div>
+      <a class="link-arrow" href="{% url 'catalog:product_list' %}">Вернуться в каталог →</a>
+    </aside>
+  </div>
+</section>
+{% endblock %}

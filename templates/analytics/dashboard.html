@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Аналитика — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container dash-head">
+    <div>
+      <nav class="breadcrumbs" aria-label="Хлебные крошки">
+        <a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span>
+        <span aria-current="page">Аналитика</span>
+      </nav>
+      <h1 class="page-title">Аналитика магазина</h1>
+      <p class="page-lead">{{ period.dates.0|date:"j E" }} — {{ period.dates|last|date:"j E Y" }} · время Бишкека</p>
+    </div>
+    <div class="dash-controls">
+      <nav class="segmented" aria-label="Период">
+        {% for d in allowed_days %}
+          <a href="?days={{ d }}" class="segmented-item{% if d == period.days %} is-active{% endif %}"{% if d == period.days %} aria-current="true"{% endif %}>{{ d }} дн.</a>
+        {% endfor %}
+      </nav>
+      <div class="dash-export">
+        <a class="btn btn-ghost btn-sm" href="{% url 'analytics:export_events' %}?days={{ period.days }}">CSV: события</a>
+        <a class="btn btn-ghost btn-sm" href="{% url 'analytics:export_order_items' %}?days={{ period.days }}">CSV: заказы</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tight viz-root">
+  <div class="container dash">
+
+    {# ---------- KPI ---------- #}
+    <div class="kpi-row">
+      <div class="kpi kpi-hero">
+        <span class="kpi-label">Выручка</span>
+        <span class="kpi-value">{{ kpis.revenue|floatformat:0|intcomma }} <small>{{ brand.currency }}</small></span>
+        <span class="kpi-note">без отменённых заказов{% if kpis.cancelled %} · отменено: {{ kpis.cancelled }}{% endif %}</span>
+      </div>
+      <div class="kpi"><span class="kpi-label">Заказы</span><span class="kpi-value">{{ kpis.orders }}</span></div>
+      <div class="kpi"><span class="kpi-label">Средний чек</span><span class="kpi-value">{% if kpis.avg_check %}{{ kpis.avg_check|floatformat:0|intcomma }}{% else %}—{% endif %}</span></div>
+      <div class="kpi"><span class="kpi-label">Посетители</span><span class="kpi-value">{{ kpis.visitors|intcomma }}</span></div>
+      <div class="kpi"><span class="kpi-label">Конверсия в заказ</span><span class="kpi-value">{{ conversion_pct }}</span></div>
+    </div>
+
+    {# ---------- Воронка ---------- #}
+    <article class="panel">
+      <header class="panel-head">
+        <h2>Воронка</h2>
+        <p>Уникальные посетители на каждом шаге. Посетитель узнаётся и после входа в аккаунт.</p>
+      </header>
+      <ol class="funnel">
+        {% for step in funnel_rows %}
+          <li class="funnel-step" tabindex="0" data-tip-value="{{ step.count|intcomma }}" data-tip-label="{{ step.label }}">
+            <div class="funnel-meta">
+              <span class="funnel-label">{{ step.label }}</span>
+              <span class="funnel-num">{{ step.count|intcomma }}</span>
+            </div>
+            <span class="hbar-track" aria-hidden="true"><span class="hbar-fill" style="width: {{ step.pct|stringformat:'s' }}%"></span></span>
+            <span class="funnel-rate">
+              {% if not forloop.first %}{{ step.of_prev_pct }} от предыдущего шага · {{ step.of_first_pct }} от первого{% else %}база воронки{% endif %}
+            </span>
+          </li>
+        {% endfor %}
+      </ol>
+    </article>
+
+    {# ---------- Динамика ---------- #}
+    <div class="panel-grid">
+      {% include "analytics/_column.html" with chart=revenue_chart title="Выручка по дням" sub="сом, без отменённых" rows=daily key="revenue" %}
+      {% include "analytics/_line.html" with chart=views_chart title="Просмотры товаров по дням" sub="число просмотров" rows=daily key="views" %}
+    </div>
+
+    {# ---------- Товары и категории ---------- #}
+    <div class="panel-grid panel-grid-3">
+      <article class="panel">
+        <header class="panel-head"><h2>Самые просматриваемые</h2><p>просмотры; в подсказке — доля добавивших в корзину</p></header>
+        {% include "analytics/_bars.html" with rows=views_rows %}
+      </article>
+      <article class="panel">
+        <header class="panel-head"><h2>Топ по выручке</h2><p>сом, по позициям заказов</p></header>
+        {% include "analytics/_bars.html" with rows=revenue_rows empty="Заказов за период нет." %}
+      </article>
+      <article class="panel">
+        <header class="panel-head"><h2>Выручка по категориям</h2><p>по текущей категории товара</p></header>
+        {% include "analytics/_bars.html" with rows=category_rows empty="Заказов за период нет." %}
+      </article>
+    </div>
+
+    {# ---------- Поиск ---------- #}
+    <div class="panel-grid">
+      <article class="panel">
+        <header class="panel-head"><h2>Поисковые запросы</h2><p>всего поисков: {{ search.total }}</p></header>
+        {% if search.top %}
+          <table class="data-table">
+            <thead><tr><th scope="col">Запрос</th><th scope="col" class="num">Поисков</th><th scope="col" class="num">Найдено в среднем</th></tr></thead>
+            <tbody>{% for r in search.top %}<tr><td>{{ r.query }}</td><td class="num">{{ r.n }}</td><td class="num">{{ r.results|floatformat:1 }}</td></tr>{% endfor %}</tbody>
+          </table>
+        {% else %}<p class="viz-empty">Поисков за период нет.</p>{% endif %}
+      </article>
+      <article class="panel">
+        <header class="panel-head"><h2>Искали, но не нашли</h2><p>спрос, которого нет в каталоге</p></header>
+        {% if search.zero %}
+          <table class="data-table">
+            <thead><tr><th scope="col">Запрос</th><th scope="col" class="num">Поисков</th></tr></thead>
+            <tbody>{% for r in search.zero %}<tr><td>{{ r.query }}</td><td class="num">{{ r.n }}</td></tr>{% endfor %}</tbody>
+          </table>
+        {% else %}<p class="viz-empty">Все запросы что-то находили.</p>{% endif %}
+      </article>
+    </div>
+
+    {# ---------- Аренда и обращения ---------- #}
+    <div class="panel-grid">
+      <article class="panel">
+        <header class="panel-head">
+          <h2>Заявки на аренду</h2>
+          <p>{{ rentals.total }} за период · в работе на {{ rentals.pipeline|floatformat:0|intcomma }} {{ brand.currency }}</p>
+        </header>
+        {% include "analytics/_bars.html" with rows=rental_rows %}
+      </article>
+      <article class="panel">
+        <header class="panel-head">
+          <h2>Обращения по темам</h2>
+          <p>{{ contacts.total }} за период · не обработано всего: {{ contacts.unprocessed }}</p>
+        </header>
+        {% include "analytics/_bars.html" with rows=contact_rows empty="Обращений за период нет." %}
+      </article>
+    </div>
+
+    <p class="hint dash-footnote">
+      Воронка нестрогая: на каждом шаге считаются посетители, совершившие действие в периоде.
+      Сотрудники и очевидные боты не учитываются. Выручка по категориям — по текущей категории товара.
+    </p>
+  </div>
+</section>
+<div class="viz-tooltip" role="status" aria-live="polite" hidden data-viz-tooltip><strong></strong><span></span></div>
+{% endblock %}

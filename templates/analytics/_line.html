@@ -1,0 +1,29 @@
+{% load l10n %}
+<article class="panel">
+  <header class="panel-head"><h2>{{ title }}</h2><p>{{ sub }}</p></header>
+  {% if chart.empty %}
+    <p class="viz-empty">Нет данных за период.</p>
+  {% else %}
+    {% localize off %}{# координаты SVG: точка, а не русская запятая #}
+    <svg class="viz" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="{{ title }}" data-line-chart>
+      {% for t in chart.ticks %}
+        <line class="viz-grid{% if forloop.first %} viz-base{% endif %}" x1="{{ chart.pad_l }}" x2="{{ chart.right }}" y1="{{ t.y }}" y2="{{ t.y }}"/>
+        <text class="viz-tick" x="{{ chart.pad_l|add:'-8' }}" y="{{ t.y }}" text-anchor="end" dominant-baseline="middle">{{ t.label }}</text>
+      {% endfor %}
+      <path class="viz-area" d="{{ chart.area }}"/>
+      <path class="viz-line" d="{{ chart.line }}"/>
+      <line class="viz-crosshair" x1="0" x2="0" y1="0" y2="{{ chart.base }}" hidden data-crosshair/>
+      <circle class="viz-dot" r="4" cx="0" cy="0" hidden data-hover-dot/>
+      {% if chart.end %}
+        <circle class="viz-dot" r="4" cx="{{ chart.end.x }}" cy="{{ chart.end.y }}"/>
+      {% endif %}
+      {% for h in chart.hits %}
+        <rect class="viz-hit" x="{{ h.x }}" y="0" width="{{ h.w }}" height="{{ chart.base }}" tabindex="0"
+              data-cx="{{ h.cx }}" data-cy="{{ h.cy }}" data-tip-value="{{ h.tip_value }}" data-tip-label="{{ h.tip_label }}"/>
+      {% endfor %}
+      {% for l in chart.xlabels %}<text class="viz-tick" x="{{ l.x }}" y="{{ chart.h|add:'-8' }}" text-anchor="middle">{{ l.label }}</text>{% endfor %}
+    </svg>
+    {% endlocalize %}
+  {% endif %}
+  {% include "analytics/_table.html" %}
+</article>

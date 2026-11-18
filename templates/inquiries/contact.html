@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Контакты — {{ brand.name }}{% endblock %}
+{% block meta_description %}Контакты {{ brand.name }}: адрес, телефон, email и форма обратной связи.{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span>
+      <span aria-current="page">Контакты</span>
+    </nav>
+    <h1 class="page-title">Контакты</h1>
+    <p class="page-lead">Подберём робота под задачу, рассчитаем аренду и ответим на вопросы по сервису.</p>
+  </div>
+</section>
+
+<section class="section section-tight">
+  <div class="container contact-layout">
+    <div class="contact-info">
+      <ul class="contact-list">
+        <li class="contact-item">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+          </span>
+          <div><h2>Адрес</h2><p>{{ brand.address }}</p></div>
+        </li>
+        <li class="contact-item">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+          </span>
+          <div><h2>Телефон</h2><p><a href="tel:{{ brand.phone|cut:' '|cut:'('|cut:')'|cut:'-' }}">{{ brand.phone }}</a></p></div>
+        </li>
+        <li class="contact-item">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+          </span>
+          <div><h2>Email</h2><p><a href="mailto:{{ brand.email }}">{{ brand.email }}</a></p></div>
+        </li>
+        <li class="contact-item">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </span>
+          <div><h2>Режим работы</h2><p>{{ brand.hours }}</p></div>
+        </li>
+      </ul>
+
+      <div class="contact-cta">
+        <h2>Нужна аренда?</h2>
+        <p>Для аренды удобнее сразу оставить заявку с датами — так мы быстрее подтвердим наличие.</p>
+        <a class="btn btn-outline btn-sm" href="{% url 'rentals:rental' %}">Перейти к аренде</a>
+      </div>
+    </div>
+
+    <form method="post" class="form-card" id="contact-form" novalidate data-once>
+      {% csrf_token %}
+      <h2 class="form-card-title">Напишите нам</h2>
+      {% if form.non_field_errors %}<div class="alert alert-error" role="alert">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+
+      <div class="form-row">
+        {% with field=form.name %}{% include "partials/form_field.html" %}{% endwith %}
+        {% with field=form.email %}{% include "partials/form_field.html" %}{% endwith %}
+      </div>
+      <div class="form-row">
+        {% with field=form.phone %}{% include "partials/form_field.html" %}{% endwith %}
+        {% with field=form.subject %}{% include "partials/form_field.html" %}{% endwith %}
+      </div>
+      {% with field=form.message %}{% include "partials/form_field.html" %}{% endwith %}
+
+      {# Honeypot: скрыт от людей и скринридеров #}
+      <div class="hp" aria-hidden="true">
+        <label for="{{ form.website.id_for_label }}">{{ form.website.label }}</label>
+        {{ form.website }}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block" data-submit>Отправить сообщение</button>
+      <p class="hint">Отправляя форму, вы соглашаетесь на обработку контактных данных для ответа на обращение.</p>
+    </form>
+  </div>
+</section>
+{% endblock %}

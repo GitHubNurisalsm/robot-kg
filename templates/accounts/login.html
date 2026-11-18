@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Вход — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="section auth-section">
+  <div class="container">
+    <div class="auth-card">
+      <h1 class="auth-title">Вход</h1>
+      <p class="auth-lead">Войдите, чтобы отслеживать заявки и быстрее оформлять заказы.</p>
+
+      <form method="post" class="auth-form" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-error" role="alert">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+        {% for field in form %}{% include "partials/form_field.html" %}{% endfor %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Войти</button>
+      </form>
+
+      <p class="auth-switch">Нет аккаунта?
+        <a href="{% url 'accounts:signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Зарегистрироваться</a>
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

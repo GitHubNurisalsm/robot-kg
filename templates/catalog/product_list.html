@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load ru_format %}
+
+{% block title %}{% if active_category %}{{ active_category.name }}{% else %}Каталог роботов{% endif %} — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span>
+      {% if active_category %}
+        <a href="{% url 'catalog:product_list' %}">Каталог</a><span aria-hidden="true">/</span>
+        <span aria-current="page">{{ active_category.name }}</span>
+      {% else %}
+        <span aria-current="page">Каталог</span>
+      {% endif %}
+    </nav>
+    <h1 class="page-title">{% if active_category %}{{ active_category.name }}{% else %}Каталог роботов{% endif %}</h1>
+    <p class="page-lead">
+      Найдено {{ page_obj.paginator.count }} {{ page_obj.paginator.count|ru_plural:"товар,товара,товаров" }}
+    </p>
+  </div>
+</section>
+
+<section class="section section-tight">
+  <div class="container catalog-layout">
+    <aside class="filters" aria-label="Фильтры">
+      <form method="get" class="filter-form" novalidate>
+        {% if form.non_field_errors %}<div class="alert alert-error">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+
+        <div class="field">
+          <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
+          {{ form.q }}
+          {% for e in form.q.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+        </div>
+
+        <div class="field">
+          <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+          {{ form.category }}
+          {% for e in form.category.errors %}<p class="field-error">Выберите категорию из списка.</p>{% endfor %}
+        </div>
+
+        <div class="field">
+          <span class="field-label">Цена, {{ brand.currency }}</span>
+          <div class="field-row">
+            <label class="sr-only" for="{{ form.min_price.id_for_label }}">{{ form.min_price.label }}</label>
+            {{ form.min_price }}
+            <span aria-hidden="true">—</span>
+            <label class="sr-only" for="{{ form.max_price.id_for_label }}">{{ form.max_price.label }}</label>
+            {{ form.max_price }}
+          </div>
+          {% for e in form.min_price.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+          {% for e in form.max_price.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+        </div>
+
+        <label class="check">{{ form.in_stock }} {{ form.in_stock.label }}</label>
+        <label class="check">{{ form.rentable }} {{ form.rentable.label }}</label>
+
+        <div class="field">
+          <label for="{{ form.sort.id_for_label }}">{{ form.sort.label }}</label>
+          {{ form.sort }}
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-primary">Применить</button>
+          {% if has_filters %}<a class="btn btn-ghost" href="{% url 'catalog:product_list' %}">Сбросить</a>{% endif %}
+        </div>
+      </form>
+    </aside>
+
+    <div class="catalog-results">
+      {% if products %}
+        <div class="product-grid">
+          {% for product in products %}
+            {% include "partials/product_card.html" %}
+          {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+          <nav class="pagination" aria-label="Страницы">
+            {% if page_obj.has_previous %}
+              <a class="page-link" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page_obj.previous_page_number }}" rel="prev">← Назад</a>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+              {% if num == page_obj.number %}
+                <span class="page-link is-current" aria-current="page">{{ num }}</span>
+              {% else %}
+                <a class="page-link" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ num }}">{{ num }}</a>
+              {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+              <a class="page-link" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page_obj.next_page_number }}" rel="next">Вперёд →</a>
+            {% endif %}
+          </nav>
+        {% endif %}
+      {% else %}
+        <div class="empty-state">
+          <h2>Ничего не найдено</h2>
+          <p>Попробуйте изменить запрос или сбросить фильтры.</p>
+          <a class="btn btn-outline" href="{% url 'catalog:product_list' %}">Показать все товары</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

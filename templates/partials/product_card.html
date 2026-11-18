@@ -1,0 +1,32 @@
+{% load humanize %}
+<article class="product-card">
+  <a class="product-card-media" href="{{ product.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+    <img src="{{ product.image_url }}" alt="" loading="lazy" width="320" height="240">
+    {% if product.old_price %}<span class="tag tag-sale">Скидка</span>{% endif %}
+    {% if product.is_rentable %}<span class="tag tag-rent">Аренда</span>{% endif %}
+  </a>
+  <div class="product-card-body">
+    <span class="product-card-cat">{{ product.category.name }}</span>
+    <h3 class="product-card-title"><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h3>
+    <p class="product-card-desc">{{ product.short_description }}</p>
+    <div class="product-card-footer">
+      <div class="price">
+        <span class="price-current">{{ product.price|floatformat:0|intcomma }} {{ brand.currency }}</span>
+        {% if product.old_price %}<s class="price-old">{{ product.old_price|floatformat:0|intcomma }}</s>{% endif %}
+      </div>
+      <span class="stock {% if product.in_stock %}stock-yes{% else %}stock-no{% endif %}">
+        {% if product.in_stock %}В наличии{% else %}Под заказ{% endif %}
+      </span>
+    </div>
+    {% if product.in_stock %}
+      <form method="post" action="{% url 'cart:add' product.pk %}" class="card-buy">
+        {% csrf_token %}
+        <input type="hidden" name="quantity" value="1">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="btn btn-primary btn-sm btn-block">В корзину</button>
+      </form>
+    {% else %}
+      <a class="btn btn-outline btn-sm btn-block card-buy" href="{{ product.get_absolute_url }}">Подробнее</a>
+    {% endif %}
+  </div>
+</article>

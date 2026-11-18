@@ -1,0 +1,12 @@
+{% load humanize %}
+<details class="viz-table">
+  <summary>Показать таблицей</summary>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th scope="col">Дата</th><th scope="col" class="num">Заказы</th><th scope="col" class="num">Выручка, сом</th><th scope="col" class="num">Просмотры</th></tr></thead>
+      <tbody>
+        {% for r in rows %}<tr><td>{{ r.date|date:"d.m.Y" }}</td><td class="num">{{ r.orders }}</td><td class="num">{{ r.revenue|floatformat:0|intcomma }}</td><td class="num">{{ r.views }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</details>

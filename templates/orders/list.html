@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load humanize ru_format %}
+
+{% block title %}Мои заказы — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span>
+      <span aria-current="page">Мои заказы</span>
+    </nav>
+    <h1 class="page-title">Мои заказы</h1>
+  </div>
+</section>
+
+<section class="section section-tight">
+  <div class="container">
+    {% if orders %}
+      <div class="table-wrap">
+        <table class="orders-table">
+          <thead><tr><th scope="col">Номер</th><th scope="col">Дата</th><th scope="col">Товаров</th><th scope="col">Сумма</th><th scope="col">Статус</th></tr></thead>
+          <tbody>
+            {% for order in orders %}
+              <tr>
+                <td><a href="{% url 'orders:detail' order.number %}">{{ order.number }}</a></td>
+                <td>{{ order.created_at|date:"d.m.Y" }}</td>
+                <td>{{ order.items_count|default:0 }}</td>
+                <td>{{ order.total|floatformat:0|intcomma }} {{ brand.currency }}</td>
+                <td><span class="status status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if page_obj.has_other_pages %}
+        <nav class="pagination" aria-label="Страницы">
+          {% if page_obj.has_previous %}<a class="page-link" href="?page={{ page_obj.previous_page_number }}">← Назад</a>{% endif %}
+          <span class="page-link is-current" aria-current="page">{{ page_obj.number }}</span>
+          {% if page_obj.has_next %}<a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперёд →</a>{% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="empty-state">
+        <h2>Заказов пока нет</h2>
+        <a class="btn btn-primary" href="{% url 'catalog:product_list' %}">Перейти в каталог</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

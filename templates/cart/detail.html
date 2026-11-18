@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load humanize ru_format %}
+
+{% block title %}Корзина — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span>
+      <span aria-current="page">Корзина</span>
+    </nav>
+    <h1 class="page-title">Корзина</h1>
+    {% if lines %}
+      <p class="page-lead">{{ cart.total_quantity }} {{ cart.total_quantity|ru_plural:"товар,товара,товаров" }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section section-tight">
+  <div class="container">
+    {% if lines %}
+      <div class="cart-layout">
+        <div class="cart-lines" role="list">
+          {% for line in lines %}
+            {% with product=line.product %}
+            <article class="cart-line" role="listitem">
+              <a class="cart-line-media" href="{{ product.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+                <img src="{{ product.image_url }}" alt="" width="96" height="96" loading="lazy">
+              </a>
+
+              <div class="cart-line-info">
+                <span class="product-card-cat">{{ product.category.name }}</span>
+                <h2 class="cart-line-title"><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h2>
+                <span class="hint">{{ line.unit_price|floatformat:0|intcomma }} {{ brand.currency }} / шт. · на складе {{ product.stock }}</span>
+              </div>
+
+              <form method="post" action="{% url 'cart:update' product.pk %}" class="qty-form" data-autosubmit>
+                {% csrf_token %}
+                <label class="sr-only" for="qty-{{ product.pk }}">Количество «{{ product.name }}»</label>
+                <input id="qty-{{ product.pk }}" class="qty-input" type="number" name="quantity"
+                       value="{{ line.quantity }}" min="0" max="{{ line.max_quantity }}" inputmode="numeric">
+                <button type="submit" class="btn btn-ghost btn-sm" data-autosubmit-btn>Обновить</button>
+              </form>
+
+              <div class="cart-line-total">{{ line.total|floatformat:0|intcomma }} {{ brand.currency }}</div>
+
+              <form method="post" action="{% url 'cart:remove' product.pk %}" class="cart-line-remove">
+                {% csrf_token %}
+                <button type="submit" class="icon-btn" aria-label="Удалить «{{ product.name }}» из корзины">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+                </button>
+              </form>
+            </article>
+            {% endwith %}
+          {% endfor %}
+
+          <div class="cart-lines-footer">
+            <a class="link-arrow" href="{% url 'catalog:product_list' %}">← Продолжить покупки</a>
+            <form method="post" action="{% url 'cart:clear' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-ghost btn-sm">Очистить корзину</button>
+            </form>
+          </div>
+        </div>
+
+        <aside class="cart-summary" aria-label="Итог заказа">
+          <h2 class="cart-summary-title">Итого</h2>
+          <dl class="cart-summary-rows">
+            <div><dt>Товары ({{ cart.total_quantity }})</dt><dd>{{ cart.total|floatformat:0|intcomma }} {{ brand.currency }}</dd></div>
+            <div><dt>Доставка</dt><dd>рассчитает менеджер</dd></div>
+          </dl>
+          <div class="cart-summary-total">
+            <span>К оплате</span>
+            <strong>{{ cart.total|floatformat:0|intcomma }} {{ brand.currency }}</strong>
+          </div>
+          <a class="btn btn-primary btn-lg btn-block" href="{% url 'orders:checkout' %}">Оформить заказ</a>
+          <p class="hint">{% if not user.is_authenticated %}Для оформления потребуется войти или зарегистрироваться — корзина сохранится. {% endif %}Цены указаны в сомах (KGS).</p>
+        </aside>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h2>Корзина пуста</h2>
+        <p>Загляните в каталог — там роботы на любой вкус.</p>
+        <a class="btn btn-primary" href="{% url 'catalog:product_list' %}">Перейти в каталог</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

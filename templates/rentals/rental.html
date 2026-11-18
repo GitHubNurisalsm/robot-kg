@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Аренда роботов — {{ brand.name }}{% endblock %}
+{% block meta_description %}Аренда роботов в Бишкеке для выставок, мероприятий и обучения — {{ brand.name }}.{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span>
+      <span aria-current="page">Аренда</span>
+    </nav>
+    <h1 class="page-title">Аренда роботов</h1>
+    <p class="page-lead">Для выставок, презентаций, праздников и учебных проектов — от одного дня. Доставка, настройка и оператор по договорённости.</p>
+  </div>
+</section>
+
+<section class="section section-tight" aria-labelledby="rent-list-title">
+  <div class="container">
+    <h2 id="rent-list-title" class="section-title section-title-sm">Доступные роботы</h2>
+    {% if products %}
+      <div class="rent-grid">
+        {% for product in products %}
+          <article class="rent-card">
+            <div class="rent-card-media"><img src="{{ product.image_url }}" alt="" width="120" height="120" loading="lazy"></div>
+            <div class="rent-card-body">
+              <span class="product-card-cat">{{ product.category.name }}</span>
+              <h3 class="rent-card-title"><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h3>
+              <p class="product-card-desc">{{ product.short_description }}</p>
+              <div class="rent-card-footer">
+                <span class="price-current">{{ product.rental_price_per_day|floatformat:0|intcomma }} {{ brand.currency }}<small> / сутки</small></span>
+                <a class="btn btn-outline btn-sm" href="?product={{ product.slug }}#rental-form" data-pick="{{ product.slug }}">Выбрать</a>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state"><p>Сейчас нет роботов, доступных для аренды. Напишите нам — подберём вариант.</p></div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section section-muted" id="rental-form" aria-labelledby="rent-form-title">
+  <div class="container rent-form-layout">
+    <div>
+      <span class="eyebrow">Заявка</span>
+      <h2 id="rent-form-title" class="section-title">Оформить аренду</h2>
+      <ol class="rent-steps">
+        <li><b>Заявка.</b> Выберите робота и даты.</li>
+        <li><b>Звонок менеджера.</b> Уточним детали и подтвердим наличие.</li>
+        <li><b>Договор и доставка.</b> Привезём, настроим и проведём инструктаж.</li>
+      </ol>
+      <p class="hint">Аренда возможна не раньше чем со следующего дня, срок — до 90 дней. Стоимость предварительная: итог зависит от доставки и услуг оператора.</p>
+    </div>
+
+    <form method="post" class="form-card" novalidate data-rental-form>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert alert-error" role="alert">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+
+      {% with field=form.product %}{% include "partials/form_field.html" %}{% endwith %}
+      <div class="form-row">
+        {% with field=form.start_date %}{% include "partials/form_field.html" %}{% endwith %}
+        {% with field=form.end_date %}{% include "partials/form_field.html" %}{% endwith %}
+      </div>
+      <div class="form-row">
+        {% with field=form.full_name %}{% include "partials/form_field.html" %}{% endwith %}
+        {% with field=form.phone %}{% include "partials/form_field.html" %}{% endwith %}
+      </div>
+      <div class="form-row">
+        {% with field=form.email %}{% include "partials/form_field.html" %}{% endwith %}
+        {% with field=form.organization %}{% include "partials/form_field.html" %}{% endwith %}
+      </div>
+      {% with field=form.comment %}{% include "partials/form_field.html" %}{% endwith %}
+
+      <div class="estimate" data-estimate hidden aria-live="polite">
+        <span>Предварительно:</span> <strong data-estimate-value></strong>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block" data-submit>Отправить заявку</button>
+    </form>
+  </div>
+</section>
+{{ rental_prices|json_script:"rental-prices" }}
+{% endblock %}

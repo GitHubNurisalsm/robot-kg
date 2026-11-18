@@ -1,0 +1,54 @@
+{% load static %}
+<header class="site-header" data-header>
+  <div class="container header-inner">
+    <a class="logo" href="{% url 'core:home' %}" aria-label="{{ brand.name }} — на главную">
+      <img src="{% static 'img/logo-mark.svg' %}" alt="" width="36" height="36">
+      <span class="logo-text">Robot<span class="logo-dot">.</span>KG<span class="logo-dot">.</span><b>Baiel</b></span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
+      <span class="sr-only">Открыть меню</span>
+      <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
+    </button>
+
+    <nav id="site-nav" class="site-nav" aria-label="Основное меню" data-nav>
+      <ul class="nav-list">
+        {% for item in nav_items %}
+          <li>
+            {% if item.url %}
+              <a href="{{ item.url }}" class="nav-link{% if item.active %} is-active{% endif %}"{% if item.active %} aria-current="page"{% endif %}>{{ item.label }}</a>
+            {% else %}
+              <span class="nav-link is-disabled" title="Раздел в разработке">{{ item.label }}<small>скоро</small></span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="nav-actions">
+        {% if cart_url %}
+          <a class="icon-btn" href="{{ cart_url }}" aria-label="Корзина">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2.6l2.4 12.2a1.5 1.5 0 0 0 1.5 1.2h8.7a1.5 1.5 0 0 0 1.5-1.1L21.5 7H6"/></svg>
+            {% if cart_count %}<span class="badge">{{ cart_count }}</span>{% endif %}
+          </a>
+        {% endif %}
+
+        {# is_staff первым: у покупателей проверка прав (2 запроса к БД) не выполняется #}
+        {% if user.is_staff and perms.analytics.view_dashboard %}
+          <a class="btn btn-ghost btn-sm" href="{% url 'analytics:dashboard' %}">Аналитика</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <a class="nav-user" href="{% url 'orders:list' %}" title="Мои заказы">{{ user.get_short_name|default:user.username }}</a>
+          {% if logout_url %}
+          <form method="post" action="{{ logout_url }}" class="inline-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm">Выйти</button>
+          </form>
+          {% endif %}
+        {% elif login_url %}
+          <a class="btn btn-ghost btn-sm" href="{{ login_url }}">Войти</a>
+          {% if signup_url %}<a class="btn btn-primary btn-sm" href="{{ signup_url }}">Регистрация</a>{% endif %}
+        {% endif %}
+      </div>
+    </nav>
+  </div>
+</header>

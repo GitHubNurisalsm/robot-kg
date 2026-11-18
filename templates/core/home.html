@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static ru_format %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-grid-bg" aria-hidden="true"></div>
+  <div class="container hero-inner">
+    <div class="hero-copy reveal">
+      <span class="eyebrow">Робототехника в Кыргызстане</span>
+      <h1 class="hero-title">{{ brand.name }}<span class="hero-title-sub">{{ brand.tagline }}</span></h1>
+      <p class="hero-lead">
+        Роботы-гуманоиды, образовательные конструкторы, дроны и промышленные манипуляторы —
+        для школ, университетов, бизнеса и мероприятий. Покупка и аренда с доставкой по стране.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-lg" href="{% url 'catalog:product_list' %}">Смотреть каталог</a>
+        <a class="btn btn-outline btn-lg" href="#about">О компании</a>
+      </div>
+      <dl class="hero-stats">
+        <div><dt>{{ product_total }}</dt><dd>{{ product_total|ru_plural:"модель,модели,моделей" }} в каталоге</dd></div>
+        <div><dt>24/7</dt><dd>техподдержка</dd></div>
+        <div><dt>1 год</dt><dd>гарантия</dd></div>
+      </dl>
+    </div>
+    <div class="hero-visual reveal" aria-hidden="true">
+      <div class="hero-orb"></div>
+      <img src="{% static 'img/robots/humanoid.svg' %}" alt="" width="460" height="460">
+    </div>
+  </div>
+</section>
+
+<section class="section" id="featured" aria-labelledby="featured-title">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Хиты продаж</span>
+        <h2 id="featured-title" class="section-title">Популярные роботы</h2>
+      </div>
+      <a class="link-arrow" href="{% url 'catalog:product_list' %}">Весь каталог →</a>
+    </div>
+
+    {% if featured_products %}
+      <div class="product-grid">
+        {% for product in featured_products %}
+          {% include "partials/product_card.html" %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>Пока нет избранных товаров. Отметьте их в админ-панели или выполните
+          <code>python manage.py seed_demo</code>.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section section-muted" id="categories" aria-labelledby="categories-title">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Каталог</span>
+        <h2 id="categories-title" class="section-title">Категории товаров</h2>
+      </div>
+    </div>
+
+    {% if categories %}
+      <div class="category-grid">
+        {% for category in categories %}
+          <a class="category-card" href="{% url 'catalog:product_list' %}?category={{ category.slug }}">
+            <div class="category-card-media"><img src="{{ category.image_url }}" alt="" loading="lazy" width="120" height="120"></div>
+            <div>
+              <h3 class="category-card-title">{{ category.name }}</h3>
+              <p class="category-card-desc">{{ category.description|truncatechars:90 }}</p>
+              <span class="category-card-count">{{ category.product_count }} {{ category.product_count|ru_plural:"товар,товара,товаров" }}</span>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state"><p>Категории ещё не добавлены.</p></div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section" id="about" aria-labelledby="about-title">
+  <div class="container about-grid">
+    <div>
+      <span class="eyebrow">О компании</span>
+      <h2 id="about-title" class="section-title">Мы делаем робототехнику доступной</h2>
+      <p class="about-text">
+        {{ brand.name }} — магазин и сервис аренды роботов. Мы подбираем оборудование под задачу:
+        STEM-кабинет для школы, промо-робот для выставки, манипулятор для учебной лаборатории
+        или дрон для съёмки. Помогаем с запуском, обучаем персонал и сопровождаем после покупки.
+      </p>
+    </div>
+    <ul class="feature-list">
+      <li class="feature">
+        <span class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
+        </span>
+        <div><h3>Официальная гарантия</h3><p>12 месяцев гарантии и сервис в Бишкеке.</p></div>
+      </li>
+      <li class="feature">
+        <span class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9l8-5 8 5v10"/><path d="M9 19v-6h6v6"/></svg>
+        </span>
+        <div><h3>Решения для образования</h3><p>Готовые комплекты и методички для STEM-кабинетов.</p></div>
+      </li>
+      <li class="feature">
+        <span class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        </span>
+        <div><h3>Аренда от одного дня</h3><p>Роботы для выставок, праздников и презентаций.</p></div>
+      </li>
+    </ul>
+  </div>
+</section>
+{% endblock %}

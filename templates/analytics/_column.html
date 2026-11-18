@@ -1,0 +1,25 @@
+{% load l10n %}
+<article class="panel">
+  <header class="panel-head"><h2>{{ title }}</h2><p>{{ sub }}</p></header>
+  {% if chart.empty %}
+    <p class="viz-empty">Нет данных за период.</p>
+  {% else %}
+    {% localize off %}{# координаты SVG: точка, а не русская запятая #}
+    <svg class="viz" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="{{ title }}">
+      {% for t in chart.ticks %}
+        <line class="viz-grid{% if forloop.first %} viz-base{% endif %}" x1="{{ chart.pad_l }}" x2="{{ chart.right }}" y1="{{ t.y }}" y2="{{ t.y }}"/>
+        <text class="viz-tick" x="{{ chart.pad_l|add:'-8' }}" y="{{ t.y }}" text-anchor="end" dominant-baseline="middle">{{ t.label }}</text>
+      {% endfor %}
+      {% for b in chart.bars %}
+        <g class="viz-col" tabindex="0" data-tip-value="{{ b.tip_value }}" data-tip-label="{{ b.tip_label }}">
+          <rect class="viz-hit" x="{{ b.hit_x }}" y="0" width="{{ b.hit_w }}" height="{{ chart.base }}"/>
+          {% if b.path %}<path class="viz-bar" d="{{ b.path }}"/>{% endif %}
+        </g>
+      {% endfor %}
+      {% if chart.peak %}<text class="viz-label" x="{{ chart.peak.x }}" y="{{ chart.peak.y }}" text-anchor="middle">{{ chart.peak.text }}</text>{% endif %}
+      {% for l in chart.xlabels %}<text class="viz-tick" x="{{ l.x }}" y="{{ chart.h|add:'-8' }}" text-anchor="middle">{{ l.label }}</text>{% endfor %}
+    </svg>
+    {% endlocalize %}
+  {% endif %}
+  {% include "analytics/_table.html" %}
+</article>

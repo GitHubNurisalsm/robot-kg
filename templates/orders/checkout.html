@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Оформление заказа — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span>
+      <a href="{% url 'cart:detail' %}">Корзина</a><span aria-hidden="true">/</span>
+      <span aria-current="page">Оформление</span>
+    </nav>
+    <h1 class="page-title">Оформление заказа</h1>
+  </div>
+</section>
+
+<section class="section section-tight">
+  <div class="container cart-layout">
+    <form method="post" class="form-card" novalidate data-once data-checkout>
+      {% csrf_token %}
+      {{ form.checkout_token }}{{ form.expected_total }}
+      {% if form.non_field_errors %}<div class="alert alert-error" role="alert">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+
+      <h2 class="form-card-title">Контакты</h2>
+      {% with field=form.full_name %}{% include "partials/form_field.html" %}{% endwith %}
+      <div class="form-row">
+        {% with field=form.phone %}{% include "partials/form_field.html" %}{% endwith %}
+        {% with field=form.email %}{% include "partials/form_field.html" %}{% endwith %}
+      </div>
+
+      <h2 class="form-card-title">Получение</h2>
+      <fieldset class="radio-group">
+        <legend class="sr-only">{{ form.delivery_method.label }}</legend>
+        {% for radio in form.delivery_method %}
+          <label class="radio-card">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
+        {% endfor %}
+      </fieldset>
+      <div data-address>{% with field=form.address %}{% include "partials/form_field.html" %}{% endwith %}</div>
+      {% with field=form.comment %}{% include "partials/form_field.html" %}{% endwith %}
+
+      <div class="alert">Оплата при получении или по счёту для организаций. Стоимость доставки менеджер сообщит при подтверждении.</div>
+      <button type="submit" class="btn btn-primary btn-lg btn-block" data-submit>Подтвердить заказ</button>
+    </form>
+
+    <aside class="cart-summary" aria-label="Состав заказа">
+      <h2 class="cart-summary-title">Ваш заказ</h2>
+      <ul class="summary-items">
+        {% for line in lines %}
+          <li><span>{{ line.product.name }} <small>× {{ line.quantity }}</small></span><b>{{ line.total|floatformat:0|intcomma }} {{ brand.currency }}</b></li>
+        {% endfor %}
+      </ul>
+      <div class="cart-summary-total">
+        <span>Итого</span>
+        <strong>{{ cart.total|floatformat:0|intcomma }} {{ brand.currency }}</strong>
+      </div>
+      <a class="link-arrow" href="{% url 'cart:detail' %}">← Изменить корзину</a>
+    </aside>
+  </div>
+</section>
+{% endblock %}
