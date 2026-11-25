@@ -1,5 +1,5 @@
 """
-Настройки проекта Robot.KG.Baiel.
+Настройки проекта Robot.KG.
 
 Секреты и режим отладки читаются из переменных окружения.
 Значения по умолчанию предназначены ТОЛЬКО для локальной разработки.
@@ -138,7 +138,18 @@ SITE_BRAND = {
     "hours": "Пн–Пт 9:00–19:00, Сб 10:00–16:00",
 }
 
+# Origin'ы, с которых разрешены POST-формы, например "https://robot.kg,https://www.robot.kg".
+CSRF_TRUSTED_ORIGINS = [
+    o.strip()
+    for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+    if o.strip()
+]
+
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    # Сайт работает за nginx, который завершает HTTPS и проксирует в gunicorn по HTTP.
+    # nginx ВСЕГДА перезаписывает X-Forwarded-Proto (см. deploy/nginx-robot-kg.conf),
+    # а gunicorn слушает только unix-сокет, поэтому клиент не может подделать заголовок.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

@@ -1,0 +1,27 @@
+# systemd-сервис gunicorn для Robot.KG.
+# Установка: sudo cp deploy/robot-kg.service /etc/systemd/system/
+#            sudo systemctl daemon-reload && sudo systemctl enable --now robot-kg
+
+[Unit]
+Description=Robot.KG (gunicorn)
+After=network.target
+
+[Service]
+User=robotkg
+Group=www-data
+WorkingDirectory=/srv/robot-kg
+EnvironmentFile=/srv/robot-kg/.env
+# Сокет создаёт systemd: /run/robot-kg/gunicorn.sock, доступен nginx (группа www-data).
+RuntimeDirectory=robot-kg
+UMask=0007
+# 2 воркера: SQLite + 1 ГБ RAM. Больше воркеров = больше конфликтов блокировок SQLite.
+ExecStart=/srv/robot-kg/.venv/bin/gunicorn config.wsgi:application \
+    --workers 2 \
+    --bind unix:/run/robot-kg/gunicorn.sock \
+    --timeout 30 \
+    --access-logfile - \
+    --error-logfile -
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

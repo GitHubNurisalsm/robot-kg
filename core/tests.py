@@ -66,3 +66,44 @@ class RuPluralTests(TestCase):
                  12: "товаров", 21: "товар", 22: "товара", 111: "товаров"}
         for n, expected in cases.items():
             self.assertEqual(ru_plural(n, forms), expected, n)
+
+
+class ProductionSettingsTests(TestCase):
+    """Production-настройки читаются в отдельном процессе: settings грузятся один раз при импорте."""
+
+    def _prod_settings(self, **extra_env):
+        import json
+        import os
+        import subprocess
+        import sys
+
+        env = {
+            **os.environ,
+            "DJANGO_DEBUG": "0",
+            "DJANGO_SECRET_KEY": "test-secret",
+            "DJANGO_ALLOWED_HOSTS": "robot.kg,www.robot.kg",
+            "DJANGO_CSRF_TRUSTED_ORIGINS": "https://robot.kg, https://www.robot.kg",
+            **extra_env,
+        }
+        code = (
+            "import json; from config import settings as s; print(json.dumps({"
+            "'proxy': s.SECURE_PROXY_SSL_HEADER, 'csrf': s.CSRF_TRUSTED_ORIGINS,"
+            "'hosts': s.ALLOWED_HOSTS, 'secure_cookie': s.CSRF_COOKIE_SECURE}))"
+        )
+        out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True, check=True)
+        return json.loads(out.stdout)
+
+    def test_behind_https_proxy(self):
+        """Без SECURE_PROXY_SSL_HEADER за nginx+HTTPS все POST-формы падают с 403 CSRF."""
+        s = self._prod_settings()
+        self.assertEqual(s["proxy"], ["HTTP_X_FORWARDED_PROTO", "https"])
+        self.assertEqual(s["csrf"], ["https://robot.kg", "https://www.robot.kg"])
+        self.assertEqual(s["hosts"], ["robot.kg", "www.robot.kg"])
+        self.assertTrue(s["secure_cookie"])
+
+    def test_missing_secret_key_fails_fast(self):
+        """В production без секретного ключа сайт не должен стартовать с dev-ключом."""
+        import subprocess
+
+        with self.assertRaises(subprocess.CalledProcessError):
+            self._prod_settings(DJANGO_SECRET_KEY="")
