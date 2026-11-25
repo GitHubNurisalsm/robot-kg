@@ -129,7 +129,7 @@ LOGOUT_REDIRECT_URL = "core:home"
 
 # Бренд — единый источник для шаблонов (см. core.context_processors.site).
 SITE_BRAND = {
-    "name": "Robot.KG.Baiel",
+    "name": "Robot.KG",
     "tagline": "Технологии будущего сегодня.",
     "currency": "сом",
     "phone": "+996 (555) 000-000",

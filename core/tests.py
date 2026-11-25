@@ -12,7 +12,8 @@ class HomePageTests(TestCase):
         """Главная не падает на пустой БД и показывает empty state."""
         resp = self.client.get(reverse("core:home"))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "Robot.KG.Baiel")
+        self.assertContains(resp, "Robot.KG")
+        self.assertNotContains(resp, "Baiel")
         self.assertContains(resp, "Технологии будущего сегодня.")
         self.assertContains(resp, "Пока нет избранных товаров")
 
